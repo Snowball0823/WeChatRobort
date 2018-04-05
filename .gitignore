@@ -1,0 +1,6 @@
+*.ini
+*.pkl
+*png
+/WechatFileTmp
+*.swp
+
