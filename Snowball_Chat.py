@@ -19,11 +19,20 @@ class New_Snow(object):
         self._conf=configparser.ConfigParser()
         self.path=sys.path[0]
         self._judge=os.path.exists(os.path.join(self.path,'conf.ini'))
-        judg_Tmp=os.path.exists(os.path.join(self.path,'WechatFileTmp'))
+        tmpjudg_Tmp=os.path.exists(os.path.join(self.path,'WechatFileTmp'))
         self.TmpPath=os.path.join(self.path,'WechatFileTmp')
+        filejudge_Tmp=os.path.exists(os.path.join(self.path,'UploadFiles'))
+        self.UploadPath=os.path.join(self.path,'UploadFiles')
         try:
-            if judge_Tmp==False:
+            if tmpjudge_Tmp==False:
                 os.mkdir(os.path.join(self.path,'WechatFileTmp'))
+            else:
+                pass
+        except Exception as error:
+            print('You have error!\n'+str(error))
+        try:
+            if filejudge_Tmp==False:
+                os.mkdir(os.path.join(self.path,'UploadFiles'))
             else:
                 pass
         except Exception as error:
@@ -231,8 +240,7 @@ class UserInfo :
         self.ClassTable={u'周一':[[u'9',u'55',u'11',u'35',u'3教312',u'通信系统原理',u'1',u'16',u'0'],[u'13',u'30',u'19',u'40',u'知行楼606',u'电子工程设计',u'1',u'8',u'0'],[u'19',u'50',u'21',u'30',u'知行楼606',u'电子工程设计',u'1',u'6',u'0']],u'周二':[[u'9',u'55',u'11',u'35',u'3教209',u'数字语音处理与编码',u'9',u'16',u'0'],[u'13',u'30',u'16',u'40',u'科学楼809',u'通信电路与系统实验',u'2',u'14',u'2'],[u'18',u'00',u'21',u'10',u'科学楼809',u'通信电路与系统试验',u'12',u'14',u'2']],u'周三':[[u'18',u'00',u'19',u'30',u'经E201',u'就业指导课',u'1',u'8',u'1']],u'周四':[[u'8',u'00',u'9',u'30',u'3教312',u'通信系统原理',u'1',u'12',u'0'],[u'9',u'55',u'11',u'25',u'3教209',u'数字语音处理与编码',u'9',u'16',u'0'],[u'13',u'30',u'15',u'00',u'科学楼920',u'信号处理工程训练',u'2',u'13',u'0'],[u'15',u'10',u'16',u'40',u'科学楼920',u'信号处理工程训练',u'2',u'12',u'0']],u'周五':[[u'9',u'55',u'11',u'35',u'1教314',u'数字图像处理',u'1',u'16',u'0'],[u'13',u'30',u'15',u'00',u'1教214',u'信息论基础',u'1',u'16',u'0']],u'周六':[u'Relax'],u'周日':['Relax']}
         self.ClassStr=''
         self.SearchAllClass()
-        self.UpFileCmd={u'添加文件',u'发送文件',u'浏览文件'}
-        self.MyStatu={}
+        self.MyStatu=[]
         self.SayHellos=[['5','11','早上好～'],['11','13','中午好～'],['13','18','下午好～'],['18','24','晚上好～'],['0','5','夜深了，小主人都睡了，快睡吧～']]
         self.FuckSpeaking=[u'ttsb',u'sb',u'你傻逼',u'你是sb',u'傻逼吧']
         self.weekDay={u'0':u'周一',u'1':u'周二',u'2':u'周三',u'3':u'周四',u'4':u'周五',u'5':u'周六',u'6':u'周日'}
@@ -241,8 +249,20 @@ class UserInfo :
         self.Username=otherClass.userInfo['User']['UserName']
         self.Wife=itchat.search_friends(name=u'宇宙世界第一无敌小可爱')
         self.tmpfilePath=otherClass.TmpPath
+        self.uploadFilePath=otherClass.UploadPath
+        self.cmdInputJudge=False
+        self.findFile=False
+        self.searchFile=False
+        self.uploadFile=False
+        self.actCode='0'
+        self.UpFileCmd=[u'模糊查找',u'发送文件',u'浏览文件夹']
+        self.actCodes={'1':[u'选择文件并发送',u'请输入文件名称,每个文件后加上逗号'],'2':['文件未找到,进行模糊查找',u'请输入关键字'],'3':'退出文件操作'}
+        self.upfileNames=[]
+        self.upfilePaths=[]
+        self.uploadDict={}
+        self.contects=[]
         #print('My Wife')
-        #print(self.Wife[0]['NickName'])
+        #print(self.Wife[0]['Alias'])
     def SearchAllClass(self):
         self.ClassStr=''
         for key in self.ClassTable:
@@ -252,8 +272,97 @@ class UserInfo :
                     self.ClassStr=self.ClassStr+classTmp[0]+':'+classTmp[1]+'~'+classTmp[2]+':'+classTmp[3]+'; '+u'教室: '+classTmp[4]+'; '+u'课程: '+classTmp[5]+'\n'
             else:
                 self.ClassStr=self.ClassStr+u'休息噢～主人\n'
+#class RevokMsg:
+#    def __init__(self):
+#        self.msgId=[]
+#        self.
 
 if __name__ == '__main__':
+    def FilesActInit():
+        itchat.send(u'退出文件夹操作',toUserName='filehelper')
+        UserOwn.actCode='0'
+        UserOwn.cmdInputJudge=False
+        UserOwn.findFile=False
+        UserOwn.searchFile=False
+        UserOwn.uploadFile=False
+    def UploadMyFiles(msg):
+        if (msg.text==UserOwn.UpFileCmd[1]) and not UserOwn.uploadFile:
+            pass
+        elif (msg.text==UserOwn.UpFileCmd[2]) and not UserOwn.uploadFile:
+            UserOwn.upfileNames.clear()
+            UserOwn.upfilePaths.clear()
+            UserOwn.uploadDict.clear()
+            replyMsg='在上传文件夹下有这些文件:\n'
+            i=0
+            #改上传文件路径
+            for root,dirc,files in os.walk( os.path.split(UserOwn.uploadFilePath)[0],topdown=True,followlinks=True):
+                for tmp in files:
+                    i+=1
+                    replyMsg+=str(i)+'. '+tmp+'\n'
+                    UserOwn.upfileNames.append(tmp)
+                    UserOwn.upfilePaths.append(root)
+            #print(UserOwn.upfileNames)
+            #print(UserOwn.upfilePaths)
+            try:
+                UserOwn.uploadDict=dict(zip(UserOwn.upfileNames,UserOwn.upfilePaths))
+            except Exception as error:
+                print('You have error!\n'+str(error))
+            print(UserOwn.uploadDict)
+            UserOwn.findFile=True
+            UserOwn.cmdInputJudge=True
+            if replyMsg=='在上传文件夹下有这些文件:\n':
+                replyMsg='主人,在上传文件夹没有文件噢'
+                UserOwn.cmdInputJudge=False
+                itchat.send(replyMsg,toUserName='filehelper')
+            else:
+                itchat.send(replyMsg,toUserName='filehelper')
+                keysTmp=UserOwn.actCodes.keys()
+                replyMsg="可以进行以下操作:\n"
+                for i in keysTmp:
+                    replyMsg+=i+'. '+UserOwn.actCodes[i][0]+'\n'
+                replyMsg+='请输入操作编码,如\"1\",\"2\"等'
+                itchat.send(replyMsg,toUserName='filehelper')
+            return
+        elif UserOwn.findFile and not UserOwn.searchFile and not UserOwn.uploadFile:
+            if msg.text in UserOwn.actCodes.keys():
+                if msg.text=='3':
+                    FilesActInit()
+                    return
+                else:
+                    itchat.send(UserOwn.actCodes[msg.text][1],toUserName='filehelper')
+                    UserOwn.actCode=msg.text
+                    return
+            if UserOwn.actCode!='0':
+                if UserOwn.actCode=='1':
+                    UserOwn.upfilePaths.clear()
+                    fileNametmp=msg.text.split(',')
+                    for tmp in fileNametmp:
+                        try:
+                            UserOwn.upfilePaths.append(os.path.join(UserOwn.uploadDict[tmp],tmp))
+                        except KeyError:
+                            itchat.send('主人,文件: \"'+tmp+'\"不存在,将不会被发送',toUserName='filehelper')
+                    if len(UserOwn.upfilePaths)>0:
+                        UserOwn.uploadFile=True
+                        itchat.send('主人,请输入需要发送的人的昵称或者你给他们的备注，多个人中间用逗号隔开噢～也可以输入\"3\"来退出',toUserName='filehelper')
+                        return
+                    else:
+                        itchat.send('主人,没有文件将被发送,可以继续输入文件或输入\"3\"退出文件夹操作',toUserName='filehelper')
+                        UserOwn.uploadFile=False
+                        return
+                return
+        elif UserOwn.uploadFile:
+            if msg.text=='3':
+                FilesActInit()
+                return
+            else:
+                sendName=msg.text.split(',')
+                for i in sendName:
+                    sendFriend=itchat.search_friends(name=i)
+                    if len(sendFriend)==0:
+                        itchat.send('主人,\"'+i+'\" 这个好友没有噢')
+                    else:
+                        pass
+
     def TimeSayHello():
         TimeNow=time.localtime(time.time())
         #print(TimeNow)
@@ -413,6 +522,16 @@ if __name__ == '__main__':
         elif msg.text in UserOwn.SearchClass:
             ReplyTmp=SearchMyClass(msg)
             ReplyMsg=ReplyTmp
+        elif (msg.text not in UserOwn.UpFileCmd)and(('发送' in msg.text) or ('文件' in msg.text)):
+            msgTmp='如果需要操作文件，请输入：\n'
+            for cmdTmp in UserOwn.UpFileCmd:
+                msgTmp=msgTmp+'\"'+cmdTmp+'\"'+'\n'
+            ReplyMsg=msgTmp
+        elif (msg.text in UserOwn.UpFileCmd) or UserOwn.cmdInputJudge:
+            UploadMyFiles(msg)
+            return
+            #ReplyTmp=UploadMyFiles(msg)
+            #ReplyMsg=ReplyTmp
         else:
             ReplyTmp=AI_Reply(msg)
             if ReplyTmp=='':
@@ -501,12 +620,17 @@ if __name__ == '__main__':
             os.chmod(hisPath,stat.S_IRUSR)
         else:
             pass
+    #@itchat.msg_register(itchat.content.NOTE)
+    #def replyNote(msg):
+    #    print(msg)
     @itchat.msg_register(itchat.content.TEXT,isFriendChat=True)
     def Personal_Reply(msg):
+        #print(msg)
         if UserOwn.Nickname=='':
             UserOwn.InfoInit(Snowball.robort)
         else:
             pass
+        #print(UserOwn.Wife)
         History_Dirc(msg)
         if msg["ToUserName"]=='filehelper':
             #print(msg.fromUserName)
@@ -529,7 +653,7 @@ if __name__ == '__main__':
                     return defaultReply
             else:
                 pass
-    @itchat.msg_register([itchat.content.ATTACHMENT,itchat.content.PICTURE,itchat.content.VIDEO],isFriendChat=True)
+    @itchat.msg_register([itchat.content.ATTACHMENT,itchat.content.RECORDING,itchat.content.PICTURE,itchat.content.VIDEO],isFriendChat=True)
     def CollectFles(msg):
         if UserOwn.Nickname=='':
             UserOwn.InfoInit(Snowball.robort)
