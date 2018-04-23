@@ -225,6 +225,8 @@ class Robort (threading.Thread):
 
 class UserInfo :
     def __init__(self,otherInfo):
+        self.imgFile=['.png','.jpg','JPG','.jpeg','.JPEG','.bmp','.BMP','.PNG','.tiff','.raw','.RAW','.psd','.ai','.PSD','.svg','.SVG','.ico','.gif']
+        self.vidFile=['.avi','.AVI','.mov','.MOV','.wmv','.WMV','.mkv','.flv','.rmvb','.FLV','.mp4','.mp3','.wav','.wma','.WMA']
         self.turl_Key=otherInfo.tu_key
         self.Nickname=''
         self.contList=[]
@@ -256,7 +258,7 @@ class UserInfo :
         self.uploadFile=False
         self.actCode='0'
         self.UpFileCmd=[u'模糊查找',u'发送文件',u'浏览文件夹']
-        self.actCodes={'1':[u'选择文件并发送',u'请输入文件名称,每个文件后加上逗号'],'2':['文件未找到,进行模糊查找',u'请输入关键字'],'3':'退出文件操作'}
+        self.actCodes={'1':[u'选择文件并发送',u'请输入文件名称,每个文件后加上逗号'],'2':['文件未找到,进行模糊查找',u'请输入关键字'],'3':['退出文件夹操作',]}
         self.upfileNames=[]
         self.upfilePaths=[]
         self.uploadDict={}
@@ -307,7 +309,7 @@ if __name__ == '__main__':
                 UserOwn.uploadDict=dict(zip(UserOwn.upfileNames,UserOwn.upfilePaths))
             except Exception as error:
                 print('You have error!\n'+str(error))
-            print(UserOwn.uploadDict)
+            #print(UserOwn.uploadDict)
             UserOwn.findFile=True
             UserOwn.cmdInputJudge=True
             if replyMsg=='在上传文件夹下有这些文件:\n':
@@ -358,11 +360,33 @@ if __name__ == '__main__':
                 sendName=msg.text.split(',')
                 for i in sendName:
                     sendFriend=itchat.search_friends(name=i)
+                    print(sendFriend)
                     if len(sendFriend)==0:
-                        itchat.send('主人,\"'+i+'\" 这个好友没有噢')
+                        itchat.send('主人,\"'+i+'\" 这个好友没有噢',toUserName='filehelper')
                     else:
-                        pass
+                        for fileTmpPath in UserOwn.upfilePaths:
+                            fileType=os.path.splitext(fileTmpPath)[1]
+                            if fileType in UserOwn.imgFile:
+                                uploadFileToFriend(fileTmpPath,sendFriend[0]['UserName'],isImg=True)
+                            elif fileType in UserOwn.vidFile:
+                                uploadFileToFriend(fileTmpPath,sendFriend[0]['UserName'],isVideo=True)
+                            else:
+                                uploadFileToFriend(fileTmpPath,sendFriend[0]['UserName'])
+                        itchat.send('主人,好友\"'+i+'\"已经发送完毕，若有错请重新发送',toUserName='filehelper')
+                #itchat.send('主人,所有好友都已经发送啦',toUserName='filehelper')
 
+    def uploadFileToFriend(fileName,userName,isImg=False,isVideo=False):
+        try:
+            if isImg:
+                itchat.send_image(fileName,toUserName=userName)
+            elif isVideo:
+                itchat.send_video(fileName,toUserName=userName)
+            else:
+                itchat.send_file(fileName,toUserName=userName)
+            itchat.send('主人,文件:\"'+os.path.split(fileName)[1]+'\"发送成功啦～',toUserName='filehelper')
+        except Exception as error:
+            itchat.send('主人,出错啦!😭\n'+str(error),toUserName='filehelper')
+            itchat.send('文件:'+os.path.split(fileName)[1]+'发送错误～',toUserName='filehelper')
     def TimeSayHello():
         TimeNow=time.localtime(time.time())
         #print(TimeNow)
@@ -522,16 +546,14 @@ if __name__ == '__main__':
         elif msg.text in UserOwn.SearchClass:
             ReplyTmp=SearchMyClass(msg)
             ReplyMsg=ReplyTmp
+        elif (msg.text in UserOwn.UpFileCmd) or UserOwn.cmdInputJudge:
+            UploadMyFiles(msg)
+            return
         elif (msg.text not in UserOwn.UpFileCmd)and(('发送' in msg.text) or ('文件' in msg.text)):
             msgTmp='如果需要操作文件，请输入：\n'
             for cmdTmp in UserOwn.UpFileCmd:
                 msgTmp=msgTmp+'\"'+cmdTmp+'\"'+'\n'
             ReplyMsg=msgTmp
-        elif (msg.text in UserOwn.UpFileCmd) or UserOwn.cmdInputJudge:
-            UploadMyFiles(msg)
-            return
-            #ReplyTmp=UploadMyFiles(msg)
-            #ReplyMsg=ReplyTmp
         else:
             ReplyTmp=AI_Reply(msg)
             if ReplyTmp=='':
