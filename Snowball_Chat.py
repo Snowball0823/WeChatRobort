@@ -1,17 +1,20 @@
 #!/usr/local/bin/python3
-import itchat
 import os
-import requests
-import configparser
 import sys
-import shutil
 import stat
 import time
-import termios
+import shutil
 import select
-import threading
-import urllib.request
+import itchat
+import termios
+import _thread
 import datetime
+import requests
+import threading
+import configparser
+import urllib.request
+import Snowball_History
+from AutoReply import AI_Reply
 
 class New_Snow(object):
     def __init__(self):
@@ -19,7 +22,7 @@ class New_Snow(object):
         self._conf=configparser.ConfigParser()
         self.path=sys.path[0]
         self._judge=os.path.exists(os.path.join(self.path,'conf.ini'))
-        tmpjudg_Tmp=os.path.exists(os.path.join(self.path,'WechatFileTmp'))
+        tmpjudge_Tmp=os.path.exists(os.path.join(self.path,'WechatFileTmp'))
         self.TmpPath=os.path.join(self.path,'WechatFileTmp')
         filejudge_Tmp=os.path.exists(os.path.join(self.path,'UploadFiles'))
         self.UploadPath=os.path.join(self.path,'UploadFiles')
@@ -225,44 +228,47 @@ class Robort (threading.Thread):
 
 class UserInfo :
     def __init__(self,otherInfo):
-        self.imgFile=['.png','.jpg','JPG','.jpeg','.JPEG','.bmp','.BMP','.PNG','.tiff','.raw','.RAW','.psd','.ai','.PSD','.svg','.SVG','.ico','.gif']
-        self.vidFile=['.avi','.AVI','.mov','.MOV','.wmv','.WMV','.mkv','.flv','.rmvb','.FLV','.mp4','.mp3','.wav','.wma','.WMA']
         self.turl_Key=otherInfo.tu_key
         self.Nickname=''
         self.contList=[]
+        self.ClassStr=''
+        self.MyStatu=[]
+        self.upfileNames=[]
+        self.upfilePaths=[]
+        self.uploadDict={}
+        self.contects=[]
         self.ReplyStatu=True
         self.WifeReSta=True
-        self.Command_Open=[u'Come on',u'启动Snowball',u'工作',u'出来']
-        self.Command_Close=[u'Get out',u'Close',u'Relax',u'退下']
-        self.WifeCmd_Open=[u'工作',u'回来',u'启动Snowball']
-        self.WifeCmd_Close=[u'Close',u'Relax',u'退下']
-        self.SearchClass=[u'下节什么课',u'今天的课表',u'所有课表',u'明天课表',u'下节课在哪里上',u'这周第几周',u'明天有课嘛',u'今天有课嘛',u'今天下午的课',u'今天上午的课',u'明天上午的课',u'明天下午的课']
-        self.ClassRelax=[u'主人,之后没有课了噢～好好休息',u'主人今天整天没有课噢～',u'',u'明天没有课噢～可以晚点起啦😊',u'主人,下节课在宿舍上噢[Smirk],没有课啦',u'',u'明天没有课噢,主人好好休息～😊',u'今天没有课噢，主人可以再睡一会儿～',u'今天下午没有课噢,可以学习一下自己的东西了',u'今天上午没有课噢～可以干自己的事情啦',u'明天上午没有课,可以睡懒觉啦～😄',u'明天下午没有课，好好学习噢～⛽️']
-        self.ClassStart=['2018','2','26']
-        self.ClassTable={u'周一':[[u'9',u'55',u'11',u'35',u'3教312',u'通信系统原理',u'1',u'16',u'0'],[u'13',u'30',u'19',u'40',u'知行楼606',u'电子工程设计',u'1',u'8',u'0'],[u'19',u'50',u'21',u'30',u'知行楼606',u'电子工程设计',u'1',u'6',u'0']],u'周二':[[u'9',u'55',u'11',u'35',u'3教209',u'数字语音处理与编码',u'9',u'16',u'0'],[u'13',u'30',u'16',u'40',u'科学楼809',u'通信电路与系统实验',u'2',u'14',u'2'],[u'18',u'00',u'21',u'10',u'科学楼809',u'通信电路与系统试验',u'12',u'14',u'2']],u'周三':[[u'18',u'00',u'19',u'30',u'经E201',u'就业指导课',u'1',u'8',u'1']],u'周四':[[u'8',u'00',u'9',u'30',u'3教312',u'通信系统原理',u'1',u'12',u'0'],[u'9',u'55',u'11',u'25',u'3教209',u'数字语音处理与编码',u'9',u'16',u'0'],[u'13',u'30',u'15',u'00',u'科学楼920',u'信号处理工程训练',u'2',u'13',u'0'],[u'15',u'10',u'16',u'40',u'科学楼920',u'信号处理工程训练',u'2',u'12',u'0']],u'周五':[[u'9',u'55',u'11',u'35',u'1教314',u'数字图像处理',u'1',u'16',u'0'],[u'13',u'30',u'15',u'00',u'1教214',u'信息论基础',u'1',u'16',u'0']],u'周六':[u'Relax'],u'周日':['Relax']}
-        self.ClassStr=''
-        self.SearchAllClass()
-        self.MyStatu=[]
-        self.SayHellos=[['5','11','早上好～'],['11','13','中午好～'],['13','18','下午好～'],['18','24','晚上好～'],['0','5','夜深了，小主人都睡了，快睡吧～']]
-        self.FuckSpeaking=[u'ttsb',u'sb',u'你傻逼',u'你是sb',u'傻逼吧']
-        self.weekDay={u'0':u'周一',u'1':u'周二',u'2':u'周三',u'3':u'周四',u'4':u'周五',u'5':u'周六',u'6':u'周日'}
-    def InfoInit(self,otherClass):
-        self.Nickname=otherClass.userInfo['User']['NickName']
-        self.Username=otherClass.userInfo['User']['UserName']
-        self.Wife=itchat.search_friends(name=u'宇宙世界第一无敌小可爱')
-        self.tmpfilePath=otherClass.TmpPath
-        self.uploadFilePath=otherClass.UploadPath
+        self.managerFriend=False
         self.cmdInputJudge=False
         self.findFile=False
         self.searchFile=False
         self.uploadFile=False
         self.actCode='0'
+        self.Command_Open=[u'Come on',u'启动Snowball',u'工作',u'出来']
+        self.Command_Close=[u'Get out',u'Close',u'Relax',u'退下']
+        self.WifeCmd_Open=[u'工作',u'回来',u'启动Snowball']
+        self.WifeCmd_Close=[u'Close',u'Relax',u'退下']
+        self.checkFriend=[u'整理好友列表',u'清除好友列表']
         self.UpFileCmd=[u'模糊查找',u'发送文件',u'浏览文件夹']
         self.actCodes={'1':[u'选择文件并发送',u'请输入文件名称,每个文件后加上逗号'],'2':['文件未找到,进行模糊查找',u'请输入关键字'],'3':['退出文件夹操作',]}
-        self.upfileNames=[]
-        self.upfilePaths=[]
-        self.uploadDict={}
-        self.contects=[]
+        self.imgFile=['.png','.jpg','JPG','.jpeg','.JPEG','.bmp','.BMP','.PNG','.tiff','.raw','.RAW','.psd','.ai','.PSD','.svg','.SVG','.ico','.gif']
+        self.vidFile=['.avi','.AVI','.mov','.MOV','.wmv','.WMV','.mkv','.flv','.rmvb','.FLV','.mp4','.mp3','.wav','.wma','.WMA']
+        self.SayHellos=[['5','11','早上好～'],['11','13','中午好～'],['13','18','下午好～'],['18','24','晚上好～'],['0','5','夜深了，小主人都睡了，快睡吧～']]
+        self.FuckSpeaking=[u'ttsb',u'sb',u'你傻逼',u'你是sb',u'傻逼吧']
+        self.weekDay={u'0':u'周一',u'1':u'周二',u'2':u'周三',u'3':u'周四',u'4':u'周五',u'5':u'周六',u'6':u'周日'}
+        self.SearchClass=[u'下节什么课',u'今天的课表',u'所有课表',u'明天课表',u'下节课在哪里上',u'这周第几周',u'明天有课嘛',u'今天有课嘛',u'今天下午的课',u'今天上午的课',u'明天上午的课',u'明天下午的课']
+        self.ClassRelax=[u'主人,之后没有课了噢～好好休息',u'主人今天整天没有课噢～',u'',u'明天没有课噢～可以晚点起啦😊',u'主人,下节课在宿舍上噢[Smirk],没有课啦',u'',u'明天没有课噢,主人好好休息～😊',u'今天没有课噢，主人可以再睡一会儿～',u'今天下午没有课噢,可以学习一下自己的东西了',u'今天上午没有课噢～可以干自己的事情啦',u'明天上午没有课,可以睡懒觉啦～😄',u'明天下午没有课，好好学习噢～⛽️']
+        self.ClassStart=['2018','2','26']
+        self.ClassTable={u'周一':[[u'9',u'55',u'11',u'35',u'3教312',u'通信系统原理',u'1',u'16',u'0'],[u'13',u'30',u'19',u'40',u'知行楼606',u'电子工程设计',u'1',u'8',u'0'],[u'19',u'50',u'21',u'30',u'知行楼606',u'电子工程设计',u'1',u'6',u'0']],u'周二':[[u'9',u'55',u'11',u'35',u'3教209',u'数字语音处理与编码',u'9',u'16',u'0'],[u'13',u'30',u'16',u'40',u'科学楼809',u'通信电路与系统实验',u'2',u'14',u'2'],[u'18',u'00',u'21',u'10',u'科学楼809',u'通信电路与系统试验',u'12',u'14',u'2']],u'周三':[[u'18',u'00',u'19',u'30',u'经E201',u'就业指导课',u'1',u'8',u'1']],u'周四':[[u'8',u'00',u'9',u'30',u'3教312',u'通信系统原理',u'1',u'12',u'0'],[u'9',u'55',u'11',u'25',u'3教209',u'数字语音处理与编码',u'9',u'16',u'0'],[u'13',u'30',u'15',u'00',u'科学楼920',u'信号处理工程训练',u'2',u'13',u'0'],[u'15',u'10',u'16',u'40',u'科学楼920',u'信号处理工程训练',u'2',u'12',u'0']],u'周五':[[u'9',u'55',u'11',u'35',u'1教314',u'数字图像处理',u'1',u'16',u'0'],[u'13',u'30',u'15',u'00',u'1教214',u'信息论基础',u'1',u'16',u'0']],u'周六':[u'Relax'],u'周日':['Relax']}
+    def InfoInit(self,otherClass):
+        self.SearchAllClass()
+        self.userInfo=otherClass.userInfo
+        self.Nickname=otherClass.userInfo['User']['NickName']
+        self.Username=otherClass.userInfo['User']['UserName']
+        self.Wife=itchat.search_friends(name=u'宇宙世界第一无敌小可爱')
+        self.tmpfilePath=otherClass.TmpPath
+        self.uploadFilePath=otherClass.UploadPath
         #print('My Wife')
         #print(self.Wife[0]['Alias'])
     def SearchAllClass(self):
@@ -280,6 +286,46 @@ class UserInfo :
 #        self.
 
 if __name__ == '__main__':
+    ###################### Complete it late ######################
+    #def DeletChatRoom(chatroomName,nameList):
+    def OneKeyCheckFriend():
+        UserOwn.managerFriend=False
+        itchat.send(u'主人,我开始搜索好友列表～',toUserName='filehelper')
+        friendInfoList=itchat.get_friends(update=True)
+        #for i in friendInfoList:
+        #    print(i['NickName'])
+        firstChatList=[]
+        tmpChatList=[]
+        deletChatList=[]
+        tmp=[]
+        j=1
+        retopic='test'
+        for i in range(3):
+            firstChatList.append(friendInfoList[i])
+        try:
+            itchat.create_chatroom(firstChatList,topic=retopic+str(j))
+        except Exception as error:
+            print('Have an error:'+str(error))
+        count=0
+        chatUserName=itchat.search_chatrooms(name=retopic+str(j))
+        for friendTmp in friendInfoList:
+            tmp.append(friendTmp)
+            if count==37:
+                DeletChatRoom(retopic+str(j),tmpChatList+firstChatList)
+                j+=1
+                itchat.create_chatroom(firstChatList,topic=retopic+str(j))
+                chatUserName=itchat.search_chatrooms(name=retopic+str(j))
+                count=0
+                tmpChatList.claer()
+            try:
+                itchat.add_member_into_chatroom(chatUserName,tmp)
+            except Exception as error:
+                print('You test friend error:'+str(error))
+                itchat.send('主人,\"'+i['NickName']+'\"已经删除了你',toUserName='filehelper')
+            count+=1
+            tmpChatList.append(friendTmp)
+        UserOwn.managerFriend=True
+    ###################### Complete it late ######################
     def FilesActInit():
         itchat.send(u'退出文件夹操作',toUserName='filehelper')
         UserOwn.actCode='0'
@@ -287,7 +333,7 @@ if __name__ == '__main__':
         UserOwn.findFile=False
         UserOwn.searchFile=False
         UserOwn.uploadFile=False
-    def UploadMyFiles(msg):
+    def UplonadMyFiles(msg):
         if (msg.text==UserOwn.UpFileCmd[1]) and not UserOwn.uploadFile:
             pass
         elif (msg.text==UserOwn.UpFileCmd[2]) and not UserOwn.uploadFile:
@@ -337,7 +383,10 @@ if __name__ == '__main__':
             if UserOwn.actCode!='0':
                 if UserOwn.actCode=='1':
                     UserOwn.upfilePaths.clear()
-                    fileNametmp=msg.text.split(',')
+                    if ',' in msg.text:
+                        fileNametmp=msg.text.split(',')
+                    elif '，'in msg.text:
+                        fileNametmp=msg.text.split('，')
                     for tmp in fileNametmp:
                         try:
                             UserOwn.upfilePaths.append(os.path.join(UserOwn.uploadDict[tmp],tmp))
@@ -357,12 +406,15 @@ if __name__ == '__main__':
                 FilesActInit()
                 return
             else:
-                sendName=msg.text.split(',')
+                if ',' in msg.text:
+                    sendName=msg.text.split(',')
+                elif '，' in msg.text:
+                    sendName=msg.text.split('，')
                 for i in sendName:
                     sendFriend=itchat.search_friends(name=i)
                     print(sendFriend)
                     if len(sendFriend)==0:
-                        itchat.send('主人,\"'+i+'\" 这个好友没有噢',toUserName='filehelper')
+                        itchat.send('主人,\"'+i+'\" 这个好友没有噢,若想退出文件操作,请输入\"3\"',toUserName='filehelper')
                     else:
                         for fileTmpPath in UserOwn.upfilePaths:
                             fileType=os.path.splitext(fileTmpPath)[1]
@@ -496,35 +548,6 @@ if __name__ == '__main__':
                 pass
         #print('Result='+str(reply_All[reply_Num]))
         return reply_All[reply_Num]
-    def AI_Reply(msg):
-        apiUrl = 'http://openapi.tuling123.com/openapi/api'
-        turKey=Snowball.robort.tu_key
-        data_Body={'key':turKey,'info':msg.text.encode('utf8'),'userid':'Snowball'}
-        #msg.text.encode('utf8')
-        #print('info'+str(data_Body['info']))
-        try:
-            req = requests.post(apiUrl, data=data_Body).json()
-            #print('req{0}'.format(req))
-            if req['code']==100000:
-                result=req['text']
-            elif req['code']==200000:
-                result=str(req['text'])+'\n'+'链接:'+str(req['url'])
-            elif req['code']==302000:
-                result=str(req['text'])+'\n'
-                for Tmp in req['list']:
-                    artical='【'+Tmp['source']+'】:'+Tmp['article']+'\n'+'链接:'+Tmp['detailurl']
-                    result+=artical+'\n'
-            elif req['code']==308000:
-                result=str(req['text'])+'\n'
-                for Tmp in req['list']:
-                    artical='【'+Tmp['name']+'】:'+'\n'+'配料：'+Tmp['info']+'\n'+'链接:'+Tmp['detailurl']
-                    result+=artical+'\n'
-            else:
-                result=str(req)
-            return result
-        except:
-            return ''
-        #print('Your turKey='+turKey)
     def fileHelp_Msg(msg):
         if msg.text in UserOwn.Command_Open:
             if UserOwn.ReplyStatu==False:
@@ -546,6 +569,31 @@ if __name__ == '__main__':
         elif msg.text in UserOwn.SearchClass:
             ReplyTmp=SearchMyClass(msg)
             ReplyMsg=ReplyTmp
+        elif msg.text not in UserOwn.checkFriend :
+            for tmpCheck in ['清除','管理','好友']:
+                if tmpCheck in msg.text:
+                    tmpJudge=True
+                    break
+                else:
+                    tmpJudge=False
+            if tmpJudge:
+                msgTmp='如果想清理好友列表,请输入：\n'
+                for cmdTmp in UserOwn.checkFriend:
+                    msgTmp=msgTmp+'\"'+cmdTmp+'\"'+' 或者'
+                ReplyMsg=msgTmp.rstrip(' 或者')
+            else:
+                ReplyTmp=AI_Reply(UserOwn,msg)
+                if ReplyTmp=='':
+                    ReplyMsg='I don\'t know what are speaking!'
+                else:
+                    ReplyMsg=ReplyTmp
+        elif (msg.text in UserOwn.checkFriend) and not UserOwn.managerFriend:
+            msgTmp='主人,小雪球的这个功能还未完善,请耐心等候～'
+            ReplyMsg=msgTmp
+            #OneKeyCheckFriend()
+            #return
+        elif (msg.text in UserOwn.checkFriend) and UserOwn.managerFriend:
+            ReplyMsg='主人,正在进行此操作,请稍等~'
         elif (msg.text in UserOwn.UpFileCmd) or UserOwn.cmdInputJudge:
             UploadMyFiles(msg)
             return
@@ -555,7 +603,7 @@ if __name__ == '__main__':
                 msgTmp=msgTmp+'\"'+cmdTmp+'\"'+'\n'
             ReplyMsg=msgTmp
         else:
-            ReplyTmp=AI_Reply(msg)
+            ReplyTmp=AI_Reply(UserOwn,msg)
             if ReplyTmp=='':
                 ReplyMsg='I don\'t know what are speaking!'
             else:
@@ -577,7 +625,7 @@ if __name__ == '__main__':
                     itchat.send(u'那妈咪我先回去啦～有事叫我哦😊',toUserName=UserOwn.Wife[0]['UserName'])
                     UserOwn.WifeReSta=False
             else:
-                ReplyTmp=AI_Reply(msg)
+                ReplyTmp=AI_Reply(UserOwn,msg)
                 if ReplyTmp=='':
                     ReplyMsg='妈咪我还小，不懂你说的，等下问阿爸吧～'
                 else:
@@ -587,73 +635,17 @@ if __name__ == '__main__':
             ReplyMsg=wifeDefaultReply
         if UserOwn.WifeReSta:
             itchat.send(ReplyMsg,toUserName=UserOwn.Wife[0]['UserName'])
-    def History_Dirc(msg):
-        if msg["ToUserName"]!='filehelper':
-            if msg["ToUserName"]==UserOwn.Username:
-                fileName=itchat.search_friends(userName=msg["FromUserName"])['RemarkName']
-                if fileName=='':
-                    fileName=itchat.search_friends(userName=msg["FromUserName"])['NickName']
-                else:
-                    pass
-            elif msg["FromUserName"]==UserOwn.Username:
-                fileName=itchat.search_friends(userName=msg["ToUserName"])['RemarkName']
-                if fileName=='':
-                    fileName=itchat.search_friends(userName=msg["ToUserName"])['NickName']
-                else:
-                    pass
-            else:
-                pass
-            conectFile=os.path.join(UserOwn.tmpfilePath,fileName)
-
-            try:
-                if os.path.exists(conectFile)==False:
-                    os.mkdir(conectFile)
-                    hisPath=os.path.join(conectFile,fileName+'.history')
-                    #os.chmod(hisPath,stat.S_IRWXU)
-                    hisFile=open(hisPath,"a+")
-                elif os.path.exists(conectFile)==True and os.path.exists(os.path.join(conectFile,fileName+'.history'))==False:
-                    hisPath=os.path.join(conectFile,fileName+'.history')
-                    #os.chmod(hisPath,stat.S_IRWXU)
-                    hisFile=open(hisPath,"a+")
-                else:
-                    hisPath=os.path.join(conectFile,fileName+'.history')
-                    os.chmod(hisPath,stat.S_IRWXU)
-                    hisFile=open(hisPath,"a+")
-            except Exception as error:
-                print('There have error!\n'+str(error))
-            history=[]
-            localtime = time.asctime( time.localtime(time.time()) )
-            history.append(localtime+'\n')
-            history.append('['+itchat.search_friends(userName=msg["FromUserName"])['NickName']+']\n')
-            typeDic={3:'A picture',62:'A video',34:'A voice message',47:'An emoj',49:'A link(music or share)'}
-            if msg['Type']=='Text':
-                history.append(msg.text+'\n')
-            elif msg['MsgType']==3 or msg['MsgType']==62 or msg['MsgType']==34 or msg['MsgType']==47 or (msg['MsgType']==49 and msg['AppMsgType']!=2001):
-                history.append('['+typeDic[msg['MsgType']]+']\n')
-                if msg['MsgType']==49:
-                    history.append('It\'s name is :'+msg['FileName']+'\n')
-                else :
-                    pass
-            else:
-                pass
-            #print(history)
-            hisFile.writelines(history)
-            hisFile.close()
-            os.chmod(hisPath,stat.S_IRUSR)
-        else:
-            pass
     #@itchat.msg_register(itchat.content.NOTE)
     #def replyNote(msg):
     #    print(msg)
     @itchat.msg_register(itchat.content.TEXT,isFriendChat=True)
     def Personal_Reply(msg):
-        #print(msg)
         if UserOwn.Nickname=='':
             UserOwn.InfoInit(Snowball.robort)
         else:
             pass
         #print(UserOwn.Wife)
-        History_Dirc(msg)
+        Snowball_History.History_Dirc(UserOwn,msg)
         if msg["ToUserName"]=='filehelper':
             #print(msg.fromUserName)
             #print(msg["ToUserName"])
@@ -668,7 +660,7 @@ if __name__ == '__main__':
                 defaultReply='我是小雪球，我的主人不在，我已经收到消息，一会儿告诉他😊'
                 defaultReply=str(SayHello)+defaultReply
                 if msg["FromUserName"] in UserOwn.contList:
-                    AIReply=AI_Reply(msg)
+                    AIReply=AI_Reply(UserOwn,msg)
                     return AIReply or defaultReply
                 else:
                     UserOwn.contList.append(msg["FromUserName"])
@@ -681,7 +673,7 @@ if __name__ == '__main__':
             UserOwn.InfoInit(Snowball.robort)
         else:
             pass
-        History_Dirc(msg)
+        Snowball_History.History_Dirc(UserOwn,msg)
         if msg["ToUserName"]==UserOwn.Username or msg["ToUserName"]=='filehelper':
             fileName=itchat.search_friends(userName=msg["FromUserName"])['RemarkName']
             if fileName=='':
