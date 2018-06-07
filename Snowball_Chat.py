@@ -3,6 +3,7 @@ import os
 import sys
 import stat
 import time
+import glob
 import shutil
 import select
 import itchat
@@ -250,8 +251,8 @@ class UserInfo :
         self.WifeCmd_Open=[u'工作',u'回来',u'启动Snowball']
         self.WifeCmd_Close=[u'Close',u'Relax',u'退下']
         self.checkFriend=[u'整理好友列表',u'清除好友列表']
-        self.UpFileCmd=[u'模糊查找',u'发送文件',u'浏览文件夹']
-        self.actCodes={'1':[u'选择文件并发送',u'请输入文件名称,每个文件后加上逗号'],'2':['文件未找到,进行模糊查找',u'请输入关键字'],'3':['退出文件夹操作',]}
+        self.UpFileCmd=[u'模糊查找',u'完整路径或文件名发送文件',u'浏览文件夹']
+        self.actCodes={'1':[u'选择文件并发送',u'请输入文件序号,每个文件后加上逗号'],'2':['文件未找到,进行模糊查找',u'请输入关键字,多个文件关键字用逗号隔开'],'3':['退出文件夹操作',]}
         self.imgFile=['.png','.jpg','JPG','.jpeg','.JPEG','.bmp','.BMP','.PNG','.tiff','.raw','.RAW','.psd','.ai','.PSD','.svg','.SVG','.ico','.gif']
         self.vidFile=['.avi','.AVI','.mov','.MOV','.wmv','.WMV','.mkv','.flv','.rmvb','.FLV','.mp4','.mp3','.wav','.wma','.WMA']
         self.SayHellos=[['5','11','早上好～'],['11','13','中午好～'],['13','18','下午好～'],['18','24','晚上好～'],['0','5','夜深了，小主人都睡了，快睡吧～']]
@@ -286,7 +287,7 @@ class UserInfo :
 #        self.
 
 if __name__ == '__main__':
-    ###################### Complete it late ######################
+########################## Complete it late ##########################
     #def DeletChatRoom(chatroomName,nameList):
     def OneKeyCheckFriend():
         UserOwn.managerFriend=False
@@ -325,7 +326,7 @@ if __name__ == '__main__':
             count+=1
             tmpChatList.append(friendTmp)
         UserOwn.managerFriend=True
-    ###################### Complete it late ######################
+########################## Complete it late ##########################
     def FilesActInit():
         itchat.send(u'退出文件夹操作',toUserName='filehelper')
         UserOwn.actCode='0'
@@ -380,18 +381,22 @@ if __name__ == '__main__':
                     itchat.send(UserOwn.actCodes[msg.text][1],toUserName='filehelper')
                     UserOwn.actCode=msg.text
                     return
-            if UserOwn.actCode!='0':
+            if UserOwn.actCode!='0': 
                 if UserOwn.actCode=='1':
                     UserOwn.upfilePaths.clear()
                     if ',' in msg.text:
                         fileNametmp=msg.text.split(',')
-                    elif '，'in msg.text:
+                    elif '，' in msg.text:
                         fileNametmp=msg.text.split('，')
                     for tmp in fileNametmp:
                         try:
-                            UserOwn.upfilePaths.append(os.path.join(UserOwn.uploadDict[tmp],tmp))
-                        except KeyError:
-                            itchat.send('主人,文件: \"'+tmp+'\"不存在,将不会被发送',toUserName='filehelper')
+                            tmp=int(tmp)
+                            try:
+                                UserOwn.upfilePaths.append(os.path.join(UserOwn.uploadDict[UserOwn.upfileNames[tmp-1]],UserOwn.upfileNames[tmp-1]))
+                            except KeyError:
+                                itchat.send('主人,文件: \"'+tmp+'\"不存在,将不会被发送',toUserName='filehelper')
+                        except ValueError:
+                            itchat.send('主人,请输入文件序号哦,\"'+tmp+'\"不是数字～',toUserName='filehelper')
                     if len(UserOwn.upfilePaths)>0:
                         UserOwn.uploadFile=True
                         itchat.send('主人,请输入需要发送的人的昵称或者你给他们的备注，多个人中间用逗号隔开噢～也可以输入\"3\"来退出',toUserName='filehelper')
@@ -400,8 +405,15 @@ if __name__ == '__main__':
                         itchat.send('主人,没有文件将被发送,可以继续输入文件或输入\"3\"退出文件夹操作',toUserName='filehelper')
                         UserOwn.uploadFile=False
                         return
+                elif UserOwn.actCode=='2':
+                    if ',' in msg.text:
+                        globName=msg.text.split(',')
+                    elif '，' in msg.text:
+                        globName=msg.text.split('，')
+                    globPath=globNamesInSystem(globName)
                 return
         elif UserOwn.uploadFile:
+            friendError=False
             if msg.text=='3':
                 FilesActInit()
                 return
@@ -414,7 +426,8 @@ if __name__ == '__main__':
                     sendFriend=itchat.search_friends(name=i)
                     print(sendFriend)
                     if len(sendFriend)==0:
-                        itchat.send('主人,\"'+i+'\" 这个好友没有噢,若想退出文件操作,请输入\"3\"',toUserName='filehelper')
+                        itchat.send('主人,你没有\"'+i+'\" 这个好友噢',toUserName='filehelper')
+                        friendError=True
                     else:
                         for fileTmpPath in UserOwn.upfilePaths:
                             fileType=os.path.splitext(fileTmpPath)[1]
@@ -425,8 +438,17 @@ if __name__ == '__main__':
                             else:
                                 uploadFileToFriend(fileTmpPath,sendFriend[0]['UserName'])
                         itchat.send('主人,好友\"'+i+'\"已经发送完毕，若有错请重新发送',toUserName='filehelper')
-                #itchat.send('主人,所有好友都已经发送啦',toUserName='filehelper')
+                itchat.send('主人,所有好友都已经发送啦,若想退出文件操作,请输入\"3\"',toUserName='filehelper')
+                if friendError:
+                    itchat.send('主人,刚刚有好友输入有误,可以重新输入哦,若想退出文件操作,请输入\"3\"',toUserName='filehelper')
+                else:
+                    UserOwn.uploadFile=False
+                    UserOwn.actCode=0
 
+    def globNamesInSystem(globNameList):
+        pathDic={}
+        pathTmp=[]
+        
     def uploadFileToFriend(fileName,userName,isImg=False,isVideo=False):
         try:
             if isImg:
@@ -558,6 +580,7 @@ if __name__ == '__main__':
         elif msg.text in UserOwn.Command_Close:
             if UserOwn.ReplyStatu==True:
                 ReplyMsg='See you later~ '+UserOwn.Nickname
+                UserOwn.contList.clear()
                 UserOwn.ReplyStatu=False
             else:
                 ReplyMsg='I\'m only reply for you~My owener!'
@@ -569,31 +592,6 @@ if __name__ == '__main__':
         elif msg.text in UserOwn.SearchClass:
             ReplyTmp=SearchMyClass(msg)
             ReplyMsg=ReplyTmp
-        elif msg.text not in UserOwn.checkFriend :
-            for tmpCheck in ['清除','管理','好友']:
-                if tmpCheck in msg.text:
-                    tmpJudge=True
-                    break
-                else:
-                    tmpJudge=False
-            if tmpJudge:
-                msgTmp='如果想清理好友列表,请输入：\n'
-                for cmdTmp in UserOwn.checkFriend:
-                    msgTmp=msgTmp+'\"'+cmdTmp+'\"'+' 或者'
-                ReplyMsg=msgTmp.rstrip(' 或者')
-            else:
-                ReplyTmp=AI_Reply(UserOwn,msg)
-                if ReplyTmp=='':
-                    ReplyMsg='I don\'t know what are speaking!'
-                else:
-                    ReplyMsg=ReplyTmp
-        elif (msg.text in UserOwn.checkFriend) and not UserOwn.managerFriend:
-            msgTmp='主人,小雪球的这个功能还未完善,请耐心等候～'
-            ReplyMsg=msgTmp
-            #OneKeyCheckFriend()
-            #return
-        elif (msg.text in UserOwn.checkFriend) and UserOwn.managerFriend:
-            ReplyMsg='主人,正在进行此操作,请稍等~'
         elif (msg.text in UserOwn.UpFileCmd) or UserOwn.cmdInputJudge:
             UploadMyFiles(msg)
             return
@@ -602,6 +600,18 @@ if __name__ == '__main__':
             for cmdTmp in UserOwn.UpFileCmd:
                 msgTmp=msgTmp+'\"'+cmdTmp+'\"'+'\n'
             ReplyMsg=msgTmp
+        elif msg.text not in UserOwn.checkFriend and judgeGlob(msg):
+            msgTmp='如果想清理好友列表,请输入：\n'
+            for cmdTmp in UserOwn.checkFriend:
+                msgTmp=msgTmp+'\"'+cmdTmp+'\"'+' 或者'
+            ReplyMsg=msgTmp.rstrip(' 或者')
+        elif (msg.text in UserOwn.checkFriend) and not UserOwn.managerFriend:
+            msgTmp='主人,小雪球的这个功能还未完善,请耐心等候～'
+            ReplyMsg=msgTmp
+            #OneKeyCheckFriend()
+            #return
+        elif (msg.text in UserOwn.checkFriend) and UserOwn.managerFriend:
+            ReplyMsg='主人,正在进行此操作,请稍等~'
         else:
             ReplyTmp=AI_Reply(UserOwn,msg)
             if ReplyTmp=='':
@@ -609,6 +619,14 @@ if __name__ == '__main__':
             else:
                 ReplyMsg=ReplyTmp
         itchat.send(ReplyMsg,toUserName='filehelper')
+    def judgeGlob(msg):
+        for tmpCheck in ['清除','管理','好友']:
+            if tmpCheck in msg.text:
+                tmpJudge=True
+                break
+            else:
+                tmpJudge=False
+        return tmpJudge
     def myWifeReply(msg):
         SayHello=TimeSayHello()
         wifeDefaultReply='阿妈我来啦～阿爸在忙呢，我来陪你呀😊，如果不要我陪了就输入\"Close\",\"Relax\",\"退下\" 这三个指令，我就回我的小窝啦，需要我就再输入\"回来\",\"启动Snowball\",\"工作\" 这三个指令我就会回来啦～'
