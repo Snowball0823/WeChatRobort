@@ -1,20 +1,9 @@
 #!/usr/local/bin/python3
-import configparser
-import datetime
-import os
-import select
-import shutil
-import stat
-import sys
-import termios
-import threading
 import time
 import urllib.request
 
 import itchat
 import requests
-
-import _thread
 
 
 def AI_Reply(UserOwn, msg):
