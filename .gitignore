@@ -4,3 +4,7 @@
 /WechatFileTmp
 *.swp
 /Snowball_Try.py
+__pycache__
+.DS_Stor
+/tmpe
+/UploadFiles
