@@ -1,22 +1,23 @@
 #!/usr/local/bin/python3
 import os
 import shutil
-import stat
 import sys
 import threading
 import urllib.request
+import time
+import termios
 
 import itchat
 import requests
 
 import _thread
 
-from .Robort_AutoReply import AI_Reply, TimeSayHello, myWifeReply
-from .Robort_Config import Robort_Conf
-from .Robort_Operation import fileHelp_Msg
-from .Snowball_CustomInfo import UserInfo
-from .Snowball_History import *
-from .utils import KeyBoard
+from Robort_AutoReply import AI_Reply, TimeSayHello, myWifeReply
+from Robort_Config import Robort_Conf
+from Robort_Operation import fileHelp_Msg
+from Snowball_CustomInfo import UserInfo
+from Snowball_History import History_Dirc
+from utils import KeyBoard
 
 
 class Robort(threading.Thread):
@@ -24,17 +25,10 @@ class Robort(threading.Thread):
         self.robort_conf = Robort_Conf()
         threading.Thread.__init__(self)
 
-    def Log_in(self):
-        self.userInfo = itchat.web_init()
-        print('Welcom back!' + self.userInfo['User']['NickName'])
-
-    def Log_out(self):
-        print('Bye~' + self.userInfo['User']['NickName'])
-
     def run(self):
         itchat.auto_login(hotReload=True,
-                          loginCallback=self.Log_in,
-                          exitCallback=self.Log_out)
+                          loginCallback=self.robort_conf.Log_in,
+                          exitCallback=self.robort_conf.Log_out)
         city_info = urllib.request.urlopen(
             urllib.request.Request(
                 'http://pv.sohu.com/cityjson')).read().decode('gb2312')

@@ -1,3 +1,5 @@
+import itchat
+import os,sys
 ########################## Complete it late ##########################
 def FilesActInit(UserOwn):
     itchat.send(u'退出文件夹操作', toUserName='filehelper')

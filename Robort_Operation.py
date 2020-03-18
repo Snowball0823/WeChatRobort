@@ -1,6 +1,7 @@
-from .Robort_File import UploadMyFiles
-from .Robort_AutoReply import AI_Reply
-from .Robort_Schedule import SearchMyClass
+import itchat
+from Robort_File import UploadMyFiles
+from Robort_AutoReply import AI_Reply
+from Robort_Schedule import SearchMyClass
 
 ########################## Complete it late ##########################
 def DeletChatRoom(chatroomName, nameList):

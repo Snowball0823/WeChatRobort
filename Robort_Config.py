@@ -1,5 +1,7 @@
-import os
-
+import os,sys
+import configparser
+import itchat
+import stat
 
 class Robort_Conf(object):
     def __init__(self):
@@ -193,3 +195,10 @@ class Robort_Conf(object):
             except Exception as error:
                 print('You have an error!\n' + str(error))
         self.Add_Conf()
+    
+    def Log_in(self):
+        self.userInfo = itchat.web_init()
+        print('Welcom back!' + self.userInfo['User']['NickName'])
+
+    def Log_out(self):
+        print('Bye~' + self.userInfo['User']['NickName'])

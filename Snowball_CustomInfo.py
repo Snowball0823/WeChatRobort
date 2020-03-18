@@ -1,3 +1,4 @@
+import itchat
 class UserInfo:
     def __init__(self, otherInfo):
         self.turl_Key = otherInfo.tu_key
@@ -125,7 +126,7 @@ class UserInfo:
         self.userInfo = otherClass.userInfo
         self.Nickname = otherClass.userInfo['User']['NickName']
         self.Username = otherClass.userInfo['User']['UserName']
-        self.Wife = itchat.search_friends(name=u'宇宙世界第一无敌小可爱')
+        self.Wife = itchat.search_friends(name=u'忘兔丝蕊')
         self.tmpfilePath = otherClass.TmpPath
         self.uploadFilePath = otherClass.UploadPath
         #print('My Wife')

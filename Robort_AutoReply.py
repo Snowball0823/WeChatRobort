@@ -1,24 +1,29 @@
 #!/usr/local/bin/python3
 import time
 import urllib.request
+import json
 
 import itchat
 import requests
 
 
 def AI_Reply(UserOwn, msg):
-    apiUrl = 'http://openapi.tuling123.com/openapi/api'
+    print(msg.text)
+    apiUrl = 'http://openapi.tuling123.com/openapi/api/v2'
     # turKey=Snowball.robort.tu_key
     turKey = UserOwn.turl_Key
-    data_Body = {'key': turKey, 'info': msg.text.encode(
-        'utf8'), 'userid': 'Snowball'}
+    data_Body = {"reqType": 0, "perception": {"inputText": {
+        "text": msg.text}}, "userInfo": {"apiKey": turKey, "userId": 'Snowball'}}
+    data_Body = json.dumps(data_Body)
+    # data_Body = {'key': turKey, 'info': msg.text.encode('utf8'), 'userid': 'Snowball'}
     # msg.text.encode('utf8')
     # print('info'+str(data_Body['info']))
     try:
         req = requests.post(apiUrl, data=data_Body).json()
-        # print('req{0}'.format(req))
-        if req['code'] == 100000:
-            result = req['text']
+        print(req)
+        results = req['results'][0]
+        if results['resultType'] == 'text':
+            result = results['values']['text']
         elif req['code'] == 200000:
             result = str(req['text'])+'\n'+'链接:'+str(req['url'])
         elif req['code'] == 302000:
